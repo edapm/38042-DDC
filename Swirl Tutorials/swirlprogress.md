@@ -9,4 +9,4 @@
 **Completed**:
 
 -   [x] Lesson 2
--   [ ] Lesson 9
+-   [x] Lesson 9
