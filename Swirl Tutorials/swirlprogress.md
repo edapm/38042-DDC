@@ -18,4 +18,4 @@
 **Lessons**: #4 (Vectors); #7 (Matrices and Data Frames)
 
 - [x] Lesson 4
-- [ ] Lesson 7
+- [x] Lesson 7
