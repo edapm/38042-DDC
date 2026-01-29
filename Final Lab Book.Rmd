@@ -1,4 +1,22 @@
 ---
 title: "Digital Data Capture & Analysis Lab Book"
-output: html_notebook
+output: 
+  html_document: 
+    toc: true
 ---
+
+## Creating a 360 Virtual Tour of Campus
+
+This week we have been using [ThingLink](https://thinglink.com) and 360 photos taken with GoPro/Insta360 cameras to create 360 Virtual Tours.
+
+Our tour is of the Y3 building on the University campus. We started in the basement, going "up" the stairs and out of building, moving past the front of the building and back in via another door. We then went back into the basement via the lift, and then finishing in one of the seminar rooms. We used a GoPro Max camera on a tripod, and connected it via Bluetooth to an iPhone with the GoPro Quik app on for remote control of the shutter.
+
+I then uploaded the footage to ThingLink to create the tour. The platform was fairly intuitive to use, but it was a slow and repetitive task to go through each image in turn, changing settings and adding "tags" to enable moving between each image. Furthermore, there were some shots with people in, which were blurred out for privacy reasons.
+Viewing it with a VR headset was impressive, despite the low resolution of the images.
+
+Below is the final tour on ThingLink.
+
+```{r}
+knitr::include_url("https://www.thinglink.com/view/scene/2073448908817695397")
+```
+
