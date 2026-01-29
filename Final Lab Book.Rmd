@@ -1,11 +1,17 @@
 ---
 title: "Digital Data Capture & Analysis Lab Book"
+author: "Edward Mason"
 output: 
-  html_document: 
+  html_document:
     toc: true
+    toc_depth: 6
+    toc_float: true
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
-## Creating a 360 Virtual Tour of Campus
+## Weeks 1 and 2: Creating a 360 Virtual Tour of Campus
 
 This week we have been using [ThingLink](https://thinglink.com) and 360 photos taken with GoPro/Insta360 cameras to create 360 Virtual Tours.
 
