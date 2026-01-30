@@ -5,7 +5,7 @@ All my R code for the second-year module Digital Data Capture & Analysis, BSc Ge
 See progress [here](Swirl%20Tutorials/swirlprogress.md).
 
 ## Lab Book
-_Coming soon!_
+See published format [here](https://edapm.github.io/38042-DDC/Final-Lab-Book.html)
 
 ## Final Project Code
 _Coming soon!_
