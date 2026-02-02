@@ -26,5 +26,5 @@
 
 **Lessons**: #10 (Reading Tabular Data); #11 (Looking at Data)
 
-- [ ] Lesson 10
+- [x] Lesson 10
 - [ ] Lesson 11
