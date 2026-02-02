@@ -19,3 +19,12 @@
 
 - [x] Lesson 4
 - [x] Lesson 7
+
+## Week 3
+
+**Course**: The R Programming Environment
+
+**Lessons**: #10 (Reading Tabular Data); #11 (Looking at Data)
+
+- [ ] Lesson 10
+- [ ] Lesson 11
