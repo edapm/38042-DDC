@@ -33,7 +33,7 @@
 
 **Course**: Swirl Tidyverse
 
-**Lessons**: #1 (Overview), #2 (Introduction to Tibbles), #3 (Introduction to Pipes)
+**Lessons**: #1 (Overview); #2 (Introduction to Tibbles); #3 (Introduction to Pipes)
 
 - [x] Lesson 1
 - [x] Lesson 2
