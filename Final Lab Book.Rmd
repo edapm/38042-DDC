@@ -20,6 +20,8 @@ Our tour is of the Y3 building on the University campus. We started in the basem
 I then uploaded the footage to ThingLink to create the tour. The platform was fairly intuitive to use, but it was a slow and repetitive task to go through each image in turn, changing settings and adding "tags" to enable moving between each image. Furthermore, there were some shots with people in, which were blurred out for privacy reasons.
 Viewing it with a VR headset was impressive, despite the low resolution of the images.
 
+A virtual tour such as this would be useful for familiarising people with (for example) a campus, office space, or a new development. However, ethical concerns such as photographing of bystanders, as well as taking photos of sensitive sites should be considered.
+
 Below is the final tour on ThingLink.
 
 ```{r}
