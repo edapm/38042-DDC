@@ -35,6 +35,6 @@
 
 **Lessons**: #1 (Overview), #2 (Introduction to Tibbles), #3 (Introduction to Pipes)
 
-- [ ] Lesson 1
-- [ ] Lesson 2
-- [ ] Lesson 3
+- [x] Lesson 1
+- [x] Lesson 2
+- [x] Lesson 3
