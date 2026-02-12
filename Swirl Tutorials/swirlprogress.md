@@ -28,3 +28,13 @@
 
 - [x] Lesson 10
 - [x] Lesson 11
+
+## Week 4
+
+**Course**: Swirl Tidyverse
+
+**Lessons**: #1 (Overview), #2 (Introduction to Tibbles), #3 (Introduction to Pipes)
+
+- [ ] Lesson 1
+- [ ] Lesson 2
+- [ ] Lesson 3
