@@ -38,3 +38,12 @@
 - [x] Lesson 1
 - [x] Lesson 2
 - [x] Lesson 3
+
+## Week 5
+
+**Course**: Swirl Tidyverse
+
+**Lessons**: #4 (Import with readr); #6 (Import with readxl)
+
+- [ ] Lesson 4
+- [ ] Lesson 6
