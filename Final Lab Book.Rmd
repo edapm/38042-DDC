@@ -28,3 +28,4 @@ Below is the final tour on ThingLink.
 knitr::include_url("https://www.thinglink.com/view/scene/2073448908817695397")
 ```
 
+## Weeks 3 and 4: Photogrammetry, Structure for Motion and Drone Photography
