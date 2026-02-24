@@ -45,5 +45,14 @@
 
 **Lessons**: #4 (Import with readr); #6 (Import with readxl)
 
-- [ ] Lesson 4
-- [ ] Lesson 6
+- [ ] Lesson 4 (Error in swirl-tidy)
+- [x] Lesson 6
+
+## Week 6
+
+**Course**: Swirl Tidyverse
+
+**Lessons**: #7 (Transform with dplyr I); #8 (Transform with dplyr II)
+
+- [ ] Lesson 7
+- [ ] Lesson 8
