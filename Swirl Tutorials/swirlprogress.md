@@ -55,4 +55,4 @@
 **Lessons**: #7 (Transform with dplyr I); #8 (Transform with dplyr II)
 
 - [x] Lesson 7
-- [ ] Lesson 8
+- [x] Lesson 8
