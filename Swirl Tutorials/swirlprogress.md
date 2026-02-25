@@ -45,7 +45,7 @@
 
 **Lessons**: #4 (Import with readr); #6 (Import with readxl)
 
-- [ ] Lesson 4 (Error in swirl-tidy)
+- [x] Lesson 4
 - [x] Lesson 6
 
 ## Week 6
