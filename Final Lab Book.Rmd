@@ -13,19 +13,52 @@ editor_options:
 
 ## Weeks 1 and 2: Creating a 360 Virtual Tour of Campus
 
-This week we have been using [ThingLink](https://thinglink.com) and 360 photos taken with GoPro/Insta360 cameras to create 360 Virtual Tours.
+This week we have been using [ThingLink](https://thinglink.com) and 360
+photos taken with GoPro/Insta360 cameras to create 360 Virtual Tours.
 
-Our tour is of the Y3 building on the University campus. We started in the basement, going "up" the stairs and out of building, moving past the front of the building and back in via another door. We then went back into the basement via the lift, and then finishing in one of the seminar rooms. We used a GoPro Max camera on a tripod, and connected it via Bluetooth to an iPhone with the GoPro Quik app on for remote control of the shutter.
+Our tour is of the Y3 building on the University campus. We started in
+the basement, going "up" the stairs and out of building, moving past the
+front of the building and back in via another door. We then went back
+into the basement via the lift, and then finishing in one of the seminar
+rooms. We used a GoPro Max camera on a tripod, and connected it via
+Bluetooth to an iPhone with the GoPro Quik app on for remote control of
+the shutter.
 
-I then uploaded the footage to ThingLink to create the tour. The platform was fairly intuitive to use, but it was a slow and repetitive task to go through each image in turn, changing settings and adding "tags" to enable moving between each image. Furthermore, there were some shots with people in, which were blurred out for privacy reasons.
-Viewing it with a VR headset was impressive, despite the low resolution of the images.
+I then uploaded the footage to ThingLink to create the tour. The
+platform was fairly intuitive to use, but it was a slow and repetitive
+task to go through each image in turn, changing settings and adding
+"tags" to enable moving between each image. Furthermore, there were some
+shots with people in, which were blurred out for privacy reasons.
+Viewing it with a VR headset was impressive, despite the low resolution
+of the images.
 
-A virtual tour such as this would be useful for familiarising people with (for example) a campus, office space, or a new development. However, ethical concerns such as photographing of bystanders, as well as taking photos of sensitive sites should be considered.
+A virtual tour such as this would be useful for familiarising people
+with (for example) a campus, office space, or a new development.
+However, ethical concerns such as photographing of bystanders, as well
+as taking photos of sensitive sites should be considered.
 
 Below is the final tour on ThingLink.
 
-```{r}
+```{r echo=FALSE}
 knitr::include_url("https://www.thinglink.com/view/scene/2073448908817695397")
 ```
 
-## Weeks 3 and 4: Photogrammetry, Structure for Motion and Drone Photography
+## Weeks 3 and 4: Photogrammetry (Structure for Motion modelling)
+
+```{r echo=FALSE}
+knitr::include_url("https://sketchfab.com/models/6c712d4d24a74af5b12fbec2aef62aae/embed")
+```
+
+The model above is of an IKEA Marius stool in my living room. Overall, I
+would say this model is quite poor, as it does not adequately represent
+the stool.
+
+Firstly, the mesh of the model is quite poor, leading to holes and
+floating geometry, as ghost points are formed. As well as this, the
+texture of the model is very poorly captured, with none of the black
+colour of the stool in the model.
+
+Both of these issues could be due to the lack of a plain background
+(making it more difficult for the software to distinguish what the focus
+is), a poor photo distribution (i.e. the photos did not provide
+sufficient coverage of the stool), or possibly poor camera quality.
