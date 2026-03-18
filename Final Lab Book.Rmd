@@ -94,6 +94,6 @@ log_res?**
 ## Final Project: Using GTFS Feeds to Visualise Transport Data from the West Midlands
 
 **Project Aim**: Using Transport for West Midlands' GTFS feeds and the
-tidytransit R package [@poletti2026].
+tidytransit R package [@poletti2026], this project shows how service frequency and transport mode varies across the West Midlands Combined Authority area.
 
 ## References
