@@ -2,14 +2,20 @@
 title: "Digital Data Capture & Analysis Lab Book"
 author: "Edward Mason"
 output: 
-  html_document:
+  html_document: 
     toc: true
     toc_depth: 6
     toc_float: true
+    theme: flatly
 editor_options: 
   markdown: 
     wrap: 72
+bibliography: references.bib
 ---
+
+```{r load packages, echo = F, warning = F, message = F}
+library(tidyverse)
+```
 
 ## Weeks 1 and 2: Creating a 360 Virtual Tour of Campus
 
@@ -49,21 +55,45 @@ knitr::include_url("https://www.thinglink.com/view/scene/2073448908817695397")
 knitr::include_url("https://sketchfab.com/models/6c712d4d24a74af5b12fbec2aef62aae/embed")
 ```
 
-The model above is of an IKEA Marius stool in my living room. Overall, I would say this model is quite poor, as it does not adequately represent the stool.
+The model above is of an IKEA Marius stool in my living room. Overall, I
+would say this model is quite poor, as it does not adequately represent
+the stool.
 
-Firstly, the mesh of the model is quite poor, leading to holes and floating geometry, as ghost points are formed. There was also erroneous mesh points formed from carpet and wall shots. As well as this, the texture of the model is very poorly captured, with none of the black colour of the stool in the model.
+Firstly, the mesh of the model is quite poor, leading to holes and
+floating geometry, as ghost points are formed. There was also erroneous
+mesh points formed from carpet and wall shots. As well as this, the
+texture of the model is very poorly captured, with none of the black
+colour of the stool in the model.
 
-Both of these issues could be due to the lack of a plain background (making it more difficult for the software to distinguish what the focus is), a poor photo distribution (i.e. the photos did not provide sufficient coverage of the stool), or possibly poor camera quality. The other point to consider is the software used - an open-source package called [Regard3D](https://regard3d.org). Alternative methods of processing could be considered, such as modifying parameters, however considering the aforementioned background concerns, these would probably be not as consequential in approving the final model output.
+Both of these issues could be due to the lack of a plain background
+(making it more difficult for the software to distinguish what the focus
+is), a poor photo distribution (i.e. the photos did not provide
+sufficient coverage of the stool), or possibly poor camera quality. The
+other point to consider is the software used - an open-source package
+called [Regard3D](https://regard3d.org). Alternative methods of
+processing could be considered, such as modifying parameters, however
+considering the aforementioned background concerns, these would probably
+be not as consequential in approving the final model output.
 
 ## Weeks 5 and 7: Enivronmental Sensing
-**Can you calculate the temperature based on the beta coef and save it to the df_cal? Make sure you call this variable something intuitive (e.g. Temp_beta)**
 
-**Can you plot this data against the reference temperature measurements?**
+**Can you calculate the temperature based on the beta coef and save it
+to the df_cal? Make sure you call this variable something intuitive
+(e.g. Temp_beta)**
 
-**Can you log transform resistance and create a new variable called log_res?**
+**Can you plot this data against the reference temperature
+measurements?**
+
+**Can you log transform resistance and create a new variable called
+log_res?**
 
 ## Week 6: APIs and AI
-_Coming soon!_
 
-## Final Project
-_Coming soon!_
+*Coming soon!*
+
+## Final Project: Using GTFS Feeds to Visualise Transport Data from the West Midlands
+
+**Project Aim**: Using Transport for West Midlands' GTFS feeds and the
+tidytransit R package [@poletti2026].
+
+## References
