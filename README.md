@@ -8,6 +8,6 @@ See progress [here](Swirl%20Tutorials/swirlprogress.md).
 See published book [here](https://edapm.github.io/38042-DDC/Final-Lab-Book.html).
 
 ## Final Project Code
-_Coming soon!_
+See published book [above](#lab-book), code is stored [here](/Final-Project).
 
 (c) 2026 Ed Mason.
