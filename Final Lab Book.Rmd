@@ -56,7 +56,11 @@ Firstly, the mesh of the model is quite poor, leading to holes and floating geom
 Both of these issues could be due to the lack of a plain background (making it more difficult for the software to distinguish what the focus is), a poor photo distribution (i.e. the photos did not provide sufficient coverage of the stool), or possibly poor camera quality. The other point to consider is the software used - an open-source package called [Regard3D](https://regard3d.org). Alternative methods of processing could be considered, such as modifying parameters, however considering the aforementioned background concerns, these would probably be not as consequential in approving the final model output.
 
 ## Weeks 5 and 7: Enivronmental Sensing
-_Coming soon!_
+**Can you calculate the temperature based on the beta coef and save it to the df_cal? Make sure you call this variable something intuitive (e.g. Temp_beta)**
+
+**Can you plot this data against the reference temperature measurements?**
+
+**Can you log transform resistance and create a new variable called log_res?**
 
 ## Week 6: APIs and AI
 _Coming soon!_
