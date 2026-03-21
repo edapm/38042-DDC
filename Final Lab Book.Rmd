@@ -15,6 +15,23 @@ bibliography: references.bib
 
 ```{r load packages, echo = F, warning = F, message = F}
 library(tidyverse)
+library(plotly)
+library(ggpubr)
+library(ggpmisc)
+library(cowplot)
+library(lubridate)
+library(colourpicker)
+library(gganimate)
+library(thermocouple)
+library(Metrics)
+
+library(sf)
+library(photosearcher)
+library(textclean)
+library(tidytext)
+library(igraph, warn.conflicts = FALSE)
+
+library(tidytransit)
 ```
 
 ## Weeks 1 and 2: Creating a 360 Virtual Tour of Campus
@@ -45,13 +62,13 @@ as taking photos of sensitive sites should be considered.
 
 Below is the final tour on ThingLink.
 
-```{r echo=FALSE}
+```{r thinglink tour, echo = F}
 knitr::include_url("https://www.thinglink.com/view/scene/2073448908817695397")
 ```
 
 ## Weeks 3 and 4: Photogrammetry (Structure for Motion modelling)
 
-```{r echo=FALSE}
+```{r sfm model, echo = F}
 knitr::include_url("https://sketchfab.com/models/6c712d4d24a74af5b12fbec2aef62aae/embed")
 ```
 
@@ -77,57 +94,131 @@ be not as consequential in approving the final model output.
 
 ## Weeks 5 and 7: Enivronmental Sensing
 
+```{r environmental sensing - load data, echo = F, warning = F, message = F}
+df_cal <- read_csv("Practical-Week7/NTC_cal_example.csv")
+```
+
+Turning to environmental sensors, we looked into how open-source
+hardware and software and how their use has lowered the barriers to
+sensing. This opens up possibilities to non-profits, for example, to use
+sensors to back up their concerns with data. In our case, we used a
+temperature sensor, composed of a thermistor attached to an Arduino
+micro-computer (see Figure 1). The resistance across the thermistor changes with temperature, and therefore if this resistance is measured a temperature can be calculated from it.
+
+![Figure 1: Temperature Sensor
+Schematic](labbook_images/clipboard-3779242095.png)
+
+\
+
+The first part of the process involved calibration. Using four water baths at different temperatures, the resistance read by the Arduino-based sensor was recorded along with the temperature from a reference probe, with ten readings taken from each bath. The results are shown in Figure 2:
+
+```{r resistance-temp graph, echo = F, fig.width = 10, fig.cap = "Figure 2: A graph to show Resistance against Temperature as measured by an Arduino-based temperature sensor"}
+ggplot(data = df_cal, mapping = aes(x = Resistance, y = Ref_temp)) + 
+  geom_point(size=3.5, shape=1, colour="black") + 
+  ylab("Water temperature (\u00b0C)") +
+  xlab("Resistance (\u2126)")
+```
+
+\
+
+We can see a clear pattern of an increase of resistance as temperature decreases - this means that the thermistor used has a negative temperature coefficient (an NTC thermistor).
+
 ### Todo
 
-1. Give this section of your lab book a title – e.g "using environmental sensors".
+1.  ~~Give this section of your lab book a title – e.g "using
+    environmental sensors".~~
 
-2. Briefly explain how you collected the data (i.e. the methods you used). Here you can include images, schematics and text. Be sure to highlight the instruments used.
+2.  ~~Briefly explain how you collected the data (i.e. the methods you
+    used). Here you can include images, schematics and text. Be sure to
+    highlight the instruments used.~~
 
-3. For the calibration generate a scatter plot of resistance vs observed temperature. Ensure you include a figure caption and some plain text with a brief description of the pattern(s) observed.
+3.  ~~For the calibration generate a scatter plot of resistance vs
+    observed temperature. Ensure you include a figure caption and some
+    plain text with a brief description of the pattern(s) observed.~~
 
-4. Now fit a linear model and a nonlinear model. Extract information on the model fit and present these in a table with a short interpretation of the results (which model appear to have the better fit)?
+4.  Now fit a linear model and a non-linear model. Extract information
+    on the model fit and present these in a table with a short
+    interpretation of the results (which model appear to have the better
+    fit)?
 
-5. Apply both models to the data and calculate the mean and SD for each calibration data point. Present this as a table, what do you notice about the data?
+5.  Apply both models to the data and calculate the mean and SD for each
+    calibration data point. Present this as a table, what do you notice
+    about the data?
 
-6. Calculate the sensor linearity and accuracy (RMSE) based on the model you think is best. Present this data as a table or integrated into a short paragraph that describes the results. Would you be happy to use this sensor for another research project? How does it compare to commercial sensor specifications?
+6.  Calculate the sensor linearity and accuracy (RMSE) based on the
+    model you think is best. Present this data as a table or integrated
+    into a short paragraph that describes the results. Would you be
+    happy to use this sensor for another research project? How does it
+    compare to commercial sensor specifications?
 
-7. For the ADC experiment plot the data as boxplot (8-bit, 10-bit and 12-bit). What do you notice? Now plot the data as a dot plot – what does this tell us about the difference in the step size (i.e. resolution in °C)?
+7.  For the ADC experiment plot the data as boxplot (8-bit, 10-bit and
+    12-bit). What do you notice? Now plot the data as a dot plot – what
+    does this tell us about the difference in the step size (i.e.
+    resolution in °C)?
 
-8. Calculate the mean and SD for each resolution along with the mean and SD of the reference sensor (10 data points required). What do you notice?
+8.  Calculate the mean and SD for each resolution along with the mean
+    and SD of the reference sensor (10 data points required). What do
+    you notice?
 
-9. End your notebook with some short reflections on using the Arduino platform – what worked well, what didn’t and what you’d do differently if you were using the platform for another project.
+9.  ~~End your notebook with some short reflections on using the Arduino
+    platform – what worked well, what didn’t and what you’d do
+    differently if you were using the platform for another project.~~
+
+The Arduino platform is a well-developed "open-hardware" ecosystem with
+supporting software and documentation. However, as with all
+"open-source" systems, there are some pitfalls. Firstly, the system is
+very much DIY - you are provided with the components, but as the user
+you must then assemble the parts, both physically (the hardware) and in
+terms of programming the assembled system to do what you would like it
+to. This requires, in the case of the Arduino ecosystem, a knowledge of
+C/C++ languages. Furthermore, if anything goes wrong, there is no
+dedicated customer support, but only documentation and support forums.
+That being said, if these obstacles can be overcome, the Arduino
+platform can scale rapidly and relatively cheaply compared to
+alternative proprietary sensing systems, making it a viable option for
+more widespread sensing networks, or for smaller companies and/or
+non-profits who cannot afford the more expensive alternatives.
 
 ## Week 6: APIs and AI
 
 ### Todo
 
-1. An appropriate title
+1.  An appropriate title
 
-2. A map of Sutton Park showing the locations of all of the photos, coloured by the cluster that photo belongs to. Make sure to give your clusters informative names based on the top keywords
+2.  A map of Sutton Park showing the locations of all of the photos,
+    coloured by the cluster that photo belongs to. Make sure to give
+    your clusters informative names based on the top keywords
 
-3. A bar plot of the results of the sentiment analysis
+3.  A bar plot of the results of the sentiment analysis
 
-4. A reflection on the use of Flickr as a data source to understand people’s experiences of green spaces
+4.  A reflection on the use of Flickr as a data source to understand
+    people’s experiences of green spaces
 
-5. A reflection on the spatial patterns in the clusters. Are there areas with more photos than others?
+5.  A reflection on the spatial patterns in the clusters. Are there
+    areas with more photos than others?
 
-6. A reflection on whether some clusters are more consistently positive/negative than others. Why might this be?
+6.  A reflection on whether some clusters are more consistently
+    positive/negative than others. Why might this be?
 
-7. Suggestion for other data sources or methods you might you consider to understand what people value about green spaces (staying within the scope of this practical – APIs and AI)
+7.  Suggestion for other data sources or methods you might you consider
+    to understand what people value about green spaces (staying within
+    the scope of this practical – APIs and AI)
 
 ## Final Project: Using GTFS Feeds to Visualise Transport Data from the West Midlands
 
 **Project Aim**: Using Transport for West Midlands' GTFS feeds and the
-tidytransit R package [@poletti2026], this project shows how service frequency and transport mode varies across the West Midlands Combined Authority area.
+tidytransit R package [@poletti2026], this project shows how service
+frequency and transport mode varies across the West Midlands Combined
+Authority area.
 
 ### Todo
 
-1. Briefly explain what you’re trying to achieve with the project
+1.  Briefly explain what you’re trying to achieve with the project
 
-2. Explain the choices you made on the techniques used
+2.  Explain the choices you made on the techniques used
 
-3. Reflect on any ethical implications
+3.  Reflect on any ethical implications
 
-4. Critically evaluate the effectiveness of your project
+4.  Critically evaluate the effectiveness of your project
 
 ## References
