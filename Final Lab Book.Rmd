@@ -6,7 +6,7 @@ output:
     toc: true
     toc_depth: 6
     toc_float: true
-    theme: flatly
+    theme: paper
 editor_options: 
   markdown: 
     wrap: 72
@@ -103,14 +103,20 @@ hardware and software and how their use has lowered the barriers to
 sensing. This opens up possibilities to non-profits, for example, to use
 sensors to back up their concerns with data. In our case, we used a
 temperature sensor, composed of a thermistor attached to an Arduino
-micro-computer (see Figure 1). The resistance across the thermistor changes with temperature, and therefore if this resistance is measured a temperature can be calculated from it.
+micro-computer (see Figure 1). The resistance across the thermistor
+changes with temperature, and therefore if this resistance is measured a
+temperature can be calculated from it.
 
 ![Figure 1: Temperature Sensor
 Schematic](labbook_images/clipboard-3779242095.png)
 
 \
 
-The first part of the process involved calibration. Using four water baths at different temperatures, the resistance read by the Arduino-based sensor was recorded along with the temperature from a reference probe, with ten readings taken from each bath. The results are shown in Figure 2:
+The first part of the process involved calibration. Using four water
+baths at different temperatures, the resistance read by the
+Arduino-based sensor was recorded along with the temperature from a
+reference probe, with ten readings taken from each bath. The results are
+shown in Figure 2:
 
 ```{r resistance-temp graph, echo = F, fig.width = 10, fig.cap = "Figure 2: A graph to show Resistance against Temperature as measured by an Arduino-based temperature sensor"}
 ggplot(data = df_cal, mapping = aes(x = Resistance, y = Ref_temp)) + 
@@ -121,7 +127,36 @@ ggplot(data = df_cal, mapping = aes(x = Resistance, y = Ref_temp)) +
 
 \
 
-We can see a clear pattern of an increase of resistance as temperature decreases - this means that the thermistor used has a negative temperature coefficient (an NTC thermistor).
+We can see a clear pattern of an increase of resistance as temperature
+decreases - this means that the thermistor used has a negative
+temperature coefficient (an NTC thermistor).
+
+Next, we will fit a calibration model to the data. The code below
+creates a linear and non-linear (polynomial) model from the data.
+
+```{r models}
+linear_model<-lm(data = df_cal, formula = Ref_temp ~ Resistance)
+
+poly_model<-lm(data = df_cal, 
+                 formula = Ref_temp ~ poly(x = Resistance,degree = 2,
+                                           raw = T))
+```
+
+The summaries are shown in the table below:
+
+| Model | Residual Std. Error | Multiple R-Squared | F-Statistic and p-value |
+|:----------------:|:----------------:|:----------------:|:----------------:|
+| Linear Model | 3.784 (28 *df*) | 0.9434 | 466.4, p \< 2.2e-16 |
+| Polynomial Model | 0.2554 (27 *df*) | 0.9998 | 5.424 × 10^4^ , p \< 2.2e-16 |
+: Table 1: Calibration Model Summaries
+
+The summary statistics from this model shows that the polynomial model is a better fit to the data, with a smaller residual standard error, and a larger R-Squared value and F-Statistic.
+
+Below are the models plotted against the data:
+
+```{r models and data graphs, echo = F, warning = F, message = F}
+ggplot()
+```
 
 ### Todo
 
@@ -136,10 +171,10 @@ We can see a clear pattern of an increase of resistance as temperature decreases
     observed temperature. Ensure you include a figure caption and some
     plain text with a brief description of the pattern(s) observed.~~
 
-4.  Now fit a linear model and a non-linear model. Extract information
+4.  ~~Now fit a linear model and a non-linear model. Extract information
     on the model fit and present these in a table with a short
     interpretation of the results (which model appear to have the better
-    fit)?
+    fit)?~~
 
 5.  Apply both models to the data and calculate the mean and SD for each
     calibration data point. Present this as a table, what do you notice
