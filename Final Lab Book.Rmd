@@ -135,22 +135,26 @@ Next, we will fit a calibration model to the data. The code below
 creates a linear and non-linear (polynomial) model from the data.
 
 ```{r models}
-linear_model<-lm(data = df_cal, formula = Ref_temp ~ Resistance)
+linear_model <- lm(data = df_cal, 
+                   formula = Ref_temp ~ Resistance)
 
-poly_model<-lm(data = df_cal, 
-                 formula = Ref_temp ~ poly(x = Resistance,degree = 2,
-                                           raw = T))
+poly_model <- lm(data = df_cal, 
+                 formula = Ref_temp ~ poly(
+                   x = Resistance, degree = 2, raw = T))
 ```
 
 The summaries are shown in the table below:
 
 | Model | Residual Std. Error | Multiple R-Squared | F-Statistic and p-value |
-|:----------------:|:----------------:|:----------------:|:----------------:|
+|:--:|:--:|:--:|:--:|
 | Linear Model | 3.784 (28 *df*) | 0.9434 | 466.4, p \< 2.2e-16 |
 | Polynomial Model | 0.2554 (27 *df*) | 0.9998 | 5.424 × 10^4^ , p \< 2.2e-16 |
+
 : Table 1: Calibration Model Summaries
 
-The summary statistics from this model shows that the polynomial model is a better fit to the data, with a smaller residual standard error, and a larger R-Squared value and F-Statistic.
+The summary statistics from this model shows that the polynomial model
+is a better fit to the data, with a smaller residual standard error, and
+a larger R-Squared value and F-Statistic.
 
 Below are the models plotted against the data:
 
