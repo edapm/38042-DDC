@@ -105,6 +105,14 @@ poly_mod_log <- lm(data = df_cal, formula = Ref_temp ~ poly(x = log_res, degree 
 df_cal$Temp_linear <- linear_model$fitted.values
 df_cal$Temp_poly <- poly_model$fitted.values
 
+df_cal %>% 
+  summarise(
+    Mean_temp_lin = mean(df_cal$Temp_linear),
+    Mean_temp_poly = mean(df_cal$Temp_poly),
+    SD_temp_lin = sd(df_cal$Temp_linear),
+    SD_temp_poly = sd(df_cal$Temp_poly)
+  )
+
 # Q2-4 of this section do later when writing up
 
 # Transform df_cal into long_format to enable box plot graphing

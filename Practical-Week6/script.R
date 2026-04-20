@@ -82,15 +82,14 @@ assign_cluster <- tidy_tokens %>%
   mutate(cluster = factor(cluster, labels = paste("Cluster", sort(unique(cluster)))))
 
 assign_cluster$cluster <- factor(assign_cluster$cluster,
-                                 labels = c("Cluster 1",
-                                            "Cluster 2",
-                                            "Cluster 3",
-                                            "Cluster 4",
-                                            "Cluster 5",
-                                            "Cluster 6",
-                                            "Cluster 7",
-                                            "Cluster 8",
-                                            "Cluster 9"))
+                                 labels = c("Nature",
+                                            "Wildlife",
+                                            "Cold Weather",
+                                            "Seasons",
+                                            "People and the Park",
+                                            "Birds",
+                                            "Photos and Blogs",
+                                            "Other"))
 
 sutton_photo_clusters <- sutton_photos %>%
   inner_join(assign_cluster) %>%

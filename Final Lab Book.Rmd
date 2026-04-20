@@ -62,13 +62,13 @@ as taking photos of sensitive sites should be considered.
 
 Below is the final tour on ThingLink.
 
-```{r thinglink tour, echo = F}
+```{r thinglink tour, echo = F, fig.width = 10, fig.cap = "Figure 1: A virtual tour of University of Birmingham Y3 Building"}
 knitr::include_url("https://www.thinglink.com/view/scene/2073448908817695397")
 ```
 
 ## Weeks 3 and 4: Photogrammetry (Structure for Motion modelling)
 
-```{r sfm model, echo = F}
+```{r sfm model, echo = F, fig.width = 10, fig.cap = "Figure 2: A model of an IKEA Marius stool"}
 knitr::include_url("https://sketchfab.com/models/6c712d4d24a74af5b12fbec2aef62aae/embed")
 ```
 
@@ -96,6 +96,29 @@ be not as consequential in approving the final model output.
 
 ```{r environmental sensing - load data, echo = F, warning = F, message = F}
 df_cal <- read_csv("Practical-Week7/NTC_cal_example.csv")
+df_adc_water <- read_csv("Practical-Week7/ADC_water_bath_example.csv")
+df_adc_air <- read_csv("Practical-Week7/ADC_air_logging_example.csv")
+df_adc_refT <- read_csv("Practical-Week7/ADC_ref_temp.csv")
+
+# Correct time formatting error in df_adc_refT data
+df_adc_refT$Time <- parse_time(df_adc_refT$Time, "%H.%M.%S")
+
+# Restructure the data
+## ADC water bath
+df_adc_water_L <- df_adc_water |>
+  pivot_longer(!c(Time),
+               names_to = "ADC_Bits", values_to = "Resistance")
+
+df_adc_water_L <- df_adc_water_L |>
+  mutate(min=minute(Time))
+
+## ADC air
+df_adc_air_L <- df_adc_water |>
+  pivot_longer(!c(Time),
+               names_to = "ADC_Bits", values_to = "Resistance")
+
+df_adc_air_L <- df_adc_air_L |>
+  mutate(min=minute(Time))
 ```
 
 Turning to environmental sensors, we looked into how open-source
@@ -107,10 +130,12 @@ micro-computer (see Figure 1). The resistance across the thermistor
 changes with temperature, and therefore if this resistance is measured a
 temperature can be calculated from it.
 
-![Figure 1: Temperature Sensor
+![Figure 3: Temperature Sensor
 Schematic](labbook_images/clipboard-3779242095.png)
 
 \
+
+### Calibration
 
 The first part of the process involved calibration. Using four water
 baths at different temperatures, the resistance read by the
@@ -118,7 +143,7 @@ Arduino-based sensor was recorded along with the temperature from a
 reference probe, with ten readings taken from each bath. The results are
 shown in Figure 2:
 
-```{r resistance-temp graph, echo = F, fig.width = 10, fig.cap = "Figure 2: A graph to show Resistance against Temperature as measured by an Arduino-based temperature sensor"}
+```{r resistance-temp graph, echo = F, fig.width = 10, fig.cap = "Figure 4: A graph to show Resistance against Temperature as measured by an Arduino-based temperature sensor"}
 ggplot(data = df_cal, mapping = aes(x = Resistance, y = Ref_temp)) + 
   geom_point(size=3.5, shape=1, colour="black") + 
   ylab("Water temperature (\u00b0C)") +
@@ -158,8 +183,151 @@ a larger R-Squared value and F-Statistic.
 
 Below are the models plotted against the data:
 
-```{r models and data graphs, echo = F, warning = F, message = F}
-ggplot()
+```{r linear model and data graph, echo = F, warning = F, message = F, fig.width = 10, fig.cap = "Figure 5: A graph to show Resistance against Temperature with a linear model"}
+ggplot(df_cal, aes(y = Ref_temp, x = Resistance)) +
+  geom_point() +
+  geom_smooth(method = lm)
+```
+
+```{r polynomial model and data graph, echo = F, warning = F, message = F, fig.width = 10, fig.cap = "Figure 6: A graph to show Resistance against Temperature with a non-linear model"}
+ggplot(df_cal, aes(y = Ref_temp, x = Resistance)) +
+  geom_point() +
+  geom_smooth(method = lm, formula = y ~ poly(x, 2, raw = T))
+```
+
+The mean and standard deviation for each model is shown below.
+
+```{r beta and log models; fitted values into a table, echo = F, warning = F, message = F}
+df_cal$Log_res <- log(df_cal$Resistance)
+log_linear_model<-lm(data = df_cal, formula = Ref_temp ~ Log_res)
+df_cal$Temp_beta <- ThermistorTemperature(R0 = 10000, T0 = 25, R = df_cal$Resistance, betaTH = 3950)
+df_cal$Temp_linear <- linear_model$fitted.values
+df_cal$Temp_poly <- poly_model$fitted.values
+df_cal$Temp_loglin <- log_linear_model$fitted.values
+
+tib_cal <- tibble(Ref_temp = df_cal$Ref_temp, Temp_beta = df_cal$Temp_beta, Temp_linear = df_cal$Temp_linear, Temp_poly = df_cal$Temp_poly, Temp_loglin = df_cal$Temp_loglin)
+
+tib_cal_summary <- tib_cal |>
+  group_by(Ref_temp) |>
+  summarise(
+    Mean_temp_beta = mean(Temp_beta),
+    Sd_temp_beta = sd(Temp_beta),
+    Mean_temp_linear = mean(Temp_linear),
+    Sd_temp_linear = sd(Temp_linear),
+    Mean_temp_poly= mean(Temp_poly),
+    Sd_temp_poly = sd(Temp_poly),
+    Mean_temp_loglin = mean(Temp_loglin),
+    Sd_temp_loglin = sd(Temp_loglin)
+  )
+
+tib_cal_summary <- tib_cal_summary |> mutate(
+  across(where(is.numeric), round, 3)
+)
+
+tib_cal_summary <- tib_cal_summary |>
+  unite(Summ_temp_beta, Mean_temp_beta:Sd_temp_beta, sep = "±", na.rm = T) |>
+  unite(Summ_temp_linear, Mean_temp_linear:Sd_temp_linear, sep = "±", na.rm = T) |>
+  unite(Summ_temp_poly, Mean_temp_poly:Sd_temp_poly, sep = "±", na.rm = T) |>
+  unite(Summ_temp_loglin, Mean_temp_loglin:Sd_temp_loglin, sep = "±", na.rm = T)
+
+knitr::kable(tib_cal_summary, col.names = c("Ref Temp (°C)", "Beta Model (Mean ± SD °C)", "Linear Model (Mean ± SD °C)", "Poly Model (Mean ± SD °C)", "Log Linear Model (Mean ± SD °C)"), caption = "Table 2: Summary Statistics for each Reference Temperature and Model")
+```
+
+```{r calculate values, echo = T, warning = F, message = F, results = "hide", fig.width = 10, fig.cap = "Figure 7: Models Comparison"}
+df_cal_long <- df_cal |> pivot_longer(!c(Cal_medium, Resistance,
+                                       Voltage, Ref_temp, 
+                                       Log_res),
+                                    names_to = "cal_model", 
+                                    values_to = "cal_temp")
+beta_model <- ThermistorTemperature(R0 = 10000, T0 = 25, R = df_cal$Resistance, betaTH = 3950)
+
+ggplot(data = df_cal_long,
+       mapping = aes(x=Ref_temp, y = cal_temp,
+       colour = cal_model))+geom_point(size=2)+
+  facet_wrap(~cal_model,scales = "fixed")+
+  theme_pubclean()+
+  geom_abline(slope = 1)+
+  geom_smooth(se = F,method = "lm",linetype = "dashed")+  
+  stat_regline_equation(label.x=5, label.y=40)
+
+summary(beta_model)
+summary(linear_model)
+summary(poly_model)
+summary(log_linear_model)
+
+rmse(df_cal$Ref_temp, df_cal$Temp_beta)
+rmse(df_cal$Ref_temp, df_cal$Temp_linear)
+rmse(df_cal$Ref_temp, df_cal$Temp_poly)
+rmse(df_cal$Ref_temp, df_cal$Temp_loglin)
+```
+
+| **Variable** | Beta Model | Linear Model | Poly Model | Log Linear Model |
+|--------------|------------|--------------|------------|------------------|
+| R^2^         | N/A        | 0.9434       | 0.9998     | 0.9983           |
+| RMSE         | 2.253915   | 3.655814     | 0.2423138  | 0.6319984        |
+| Slope        | 0.86       | 0.94         | 1          | 1                |
+
+: Table 3: Statistical Variables for Each Model
+
+Table 3 shows that the sensor is quite accurate in calculating
+temperature, especially when paired with a polynomial model. Whilst this
+may not be as accurate as a commercial sensor, it gets incredibly close
+and for most projects this should be fine.
+
+### Analogue-Digital Conversion (ADC)
+
+```{r adc boxplots data, echo = F, warning = F, message = F}
+df_adc_water_L$Temp <- predict(object = poly_model, df_adc_water_L)
+
+df_adc_air_L$Temp <- predict(object =poly_model, df_adc_air_L)
+
+
+df_adc_air_L$Temp_beta <-ThermistorTemperature(R0 = 10000, T0 = 25, R = df_adc_air_L$Resistance, betaTH = 3950)
+
+df_adc_water_L$Temp_beta <-ThermistorTemperature(R0 = 10000, T0 = 25, R = df_adc_water_L$Resistance, betaTH = 3950)
+
+df_adc_ref_water <- df_adc_refT |> 
+  filter(Medium == "Water") |> 
+  left_join(df_adc_water_L, by = "Time")
+
+df_adc_ref_air <- df_adc_refT |> 
+  filter(Medium == "Air") |> 
+  left_join(df_adc_air_L, by = "Time")
+```
+
+```{r adc boxplot one, echo = F, warning = F, message = F, fig.width = 10, fig.cap = "Figure 8: Plot of ADC (using Water reference)"}
+df_adc_ref_water |> 
+  filter(!is.na(ADC_Bits)) |>
+  ggplot(aes(x = ADC_Bits, y = Temp_beta)) + 
+  geom_boxplot() + 
+  geom_point()
+```
+
+```{r adc boxplot two, echo = F, warning = F, message = F, fig.width = 10, fig.cap = "Figure 9: Plot of ADC (Using Water reference, without box)"}
+df_adc_ref_water |> 
+  filter(!is.na(ADC_Bits)) |>
+  ggplot(aes(x = ADC_Bits, y = Temp_beta)) + 
+  geom_dotplot(binaxis = "y")
+```
+
+```{r adc summary table, echo = F, warning = F, message = F}
+tib_adc_ref_water <- tibble(df_adc_ref_water)
+
+tib_adc_summary <- tib_adc_ref_water |>
+  group_by(ADC_Bits) |>
+  summarise(
+    Mean = mean(Temp_ref),
+    Sd = sd(Temp_ref, na.rm = T)
+  )
+
+tib_adc_summary <- tib_adc_summary |> mutate(
+  across(where(is.numeric), round, 3)
+)
+
+tib_adc_summary <- tib_adc_summary |>
+  unite(Summ_temp_ref, Mean:Sd, sep = "±", na.rm = T)
+
+knitr::kable(tib_adc_summary, caption = "Table 5: Summary Statistics for each Reference Temperature and Model")
 ```
 
 ### Todo
@@ -180,15 +348,15 @@ ggplot()
     interpretation of the results (which model appear to have the better
     fit)?~~
 
-5.  Apply both models to the data and calculate the mean and SD for each
-    calibration data point. Present this as a table, what do you notice
-    about the data?
+5.  ~~Apply both models to the data and calculate the mean and SD for
+    each calibration data point. Present this as a table, what do you
+    notice about the data?~~
 
-6.  Calculate the sensor linearity and accuracy (RMSE) based on the
+6.  ~~Calculate the sensor linearity and accuracy (RMSE) based on the
     model you think is best. Present this data as a table or integrated
     into a short paragraph that describes the results. Would you be
     happy to use this sensor for another research project? How does it
-    compare to commercial sensor specifications?
+    compare to commercial sensor specifications?~~
 
 7.  For the ADC experiment plot the data as boxplot (8-bit, 10-bit and
     12-bit). What do you notice? Now plot the data as a dot plot – what
@@ -218,30 +386,150 @@ alternative proprietary sensing systems, making it a viable option for
 more widespread sensing networks, or for smaller companies and/or
 non-profits who cannot afford the more expensive alternatives.
 
-## Week 6: APIs and AI
+## Week 6: APIs and AI - Using Flickr's API to map sentiments and topics spatially in Sutton Park, West Midlands
 
-### Todo
+Looking at how to use APIs and AI, this next section shows how the use
+of [Flickr](https://flickr.com)'s API can show in a visual way how
+people experience green spaces, with very precise spatial data.
 
-1.  An appropriate title
+```{r apis and ai setup, echo = F, message = F, warning = F, results = "hide"}
+boundary <- st_read("Practical-Week6/Sutton Park Boundary_region.shp")
 
-2.  A map of Sutton Park showing the locations of all of the photos,
-    coloured by the cluster that photo belongs to. Make sure to give
-    your clusters informative names based on the top keywords
+# note - I saved the data from the Flickr API to a csv file in order to save rendering time, as fetching all the data from the API every time takes a while!
+sutton_photos <- read_csv("Practical-Week6/sutton_photos.csv", col_names = T, na = "NA")
 
-3.  A bar plot of the results of the sentiment analysis
+sutton_text <- sutton_photos %>%
+  mutate(
+    text = paste(title, description, tags),
+    text = replace_url(text),
+    text = str_squish(text)
+  ) %>%
+  filter(!is.na(text), text != "")
 
-4.  A reflection on the use of Flickr as a data source to understand
-    people’s experiences of green spaces
+data("stop_words")
 
-5.  A reflection on the spatial patterns in the clusters. Are there
-    areas with more photos than others?
+tidy_tokens <- sutton_text %>%
+  select(url_l, longitude, latitude, title, description, tags, text) %>%
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words, by = "word") %>%
+  filter(str_detect(word, "^[a-z][a-z'-]*$")) %>%
+  count(url_l, word, sort = FALSE)
 
-6.  A reflection on whether some clusters are more consistently
-    positive/negative than others. Why might this be?
+photo_word <- tidy_tokens %>%
+  mutate(n = 1) %>%
+  pivot_wider(names_from = word, values_from = n, values_fill = 0)
 
-7.  Suggestion for other data sources or methods you might you consider
-    to understand what people value about green spaces (staying within
-    the scope of this practical – APIs and AI)
+word_counts <- tidy_tokens %>% count(word, name = "photo_count")
+
+keep_words <- word_counts %>% filter(photo_count >= 5) %>% pull(word)
+
+photo_word_mat <- tidy_tokens %>%
+  filter(word %in% keep_words) %>%
+  mutate(n = 1) %>%
+  pivot_wider(names_from = word, values_from = n, values_fill = 0) %>%
+  select(-url_l) %>%
+  as.matrix()
+
+keyword_cooccurrance <- t(photo_word_mat) %*% photo_word_mat
+
+graph <- graph_from_adjacency_matrix(keyword_cooccurrance,
+                         weighted = TRUE,
+                         mode="undirected",
+                         diag=FALSE)
+
+clusters <- cluster_walktrap(graph)
+
+keyword_importance <- map_df(1:max(clusters$membership), function(i) {
+  graph_subset <- keyword_cooccurrance[clusters$membership == i,clusters$membership == i]
+  graph_subset <- graph.adjacency(graph_subset,
+                                  weighted = TRUE,
+                                  mode="undirected",
+                                  diag=FALSE)
+  eigens <- eigen_centrality(graph)$vector
+  eigens_df <- tibble(eigenvalue = eigens, keyword = names(eigens), cluster = i) %>%
+    arrange(-eigenvalue)
+})
+
+keyword_importance %>% group_by(cluster) %>%
+  slice(1:10)
+
+word_to_cluster <- tibble(keyword = V(graph)$name, cluster = clusters$membership)
+
+assign_cluster <- tidy_tokens %>%
+  filter(word %in% word_to_cluster$keyword) %>%
+  inner_join(word_to_cluster, by = c("word" = "keyword")) %>%
+  count(url_l, cluster, name = "votes") %>%
+  group_by(url_l) %>%
+  slice_max(votes, n = 1, with_ties = TRUE) %>%
+  slice(1) %>%
+  ungroup() %>%
+  mutate(cluster = factor(cluster, labels = paste("Cluster", sort(unique(cluster)))))
+
+assign_cluster$cluster <- factor(assign_cluster$cluster,
+                                 labels = c("Nature",
+                                            "Wildlife",
+                                            "Cold Weather",
+                                            "Seasons",
+                                            "People and the Park",
+                                            "Birds",
+                                            "Photos and Blogs",
+                                            "Other"))
+
+sutton_photo_clusters <- sutton_photos %>%
+  inner_join(assign_cluster) %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = st_crs(4326))
+```
+
+Flickr is an interesting data source for understanding people's
+experience of green spaces. It provides a wide variety of tagged photos,
+across a wide temporal and spatial range. These tags give an indicator
+of what people associate with that particular photo. Furthermore,
+location tags and timestamps give a precise point in space and time when
+this occurred. However, it worth noting that the platform of Flickr is
+mostly the realm of photographers, and is not as synonymous as a
+platform such as Instagram.
+
+```{r sutton photo cluster map, echo = F, message = F, warning = F, fig.width = 10, fig.cap = "Figure 10: A map showing the locations of photos of Sutton Park (Source: Flickr)"}
+ggplot() +
+  geom_sf(data = boundary) +
+  geom_sf(data = sutton_photo_clusters, aes(colour = cluster))
+```
+
+There is an interesting spatial pattern for the cluster "People and the
+Park", which clearly shows an outline of major paths in the park.
+Furthermore, the "Wildlife" cluster is very centred around the SE of the
+park. It is also worth noting that a shortfall of the machine learning
+algorithm used to form these clusters may result in more positive or
+negative clusters, potentially due to how it links similar words
+together.
+
+```{r sutton senitment analysis, echo = F, message = F, warning = F}
+sutton_photo_clusters$text <- paste(sutton_photo_clusters$title,
+                                    sutton_photo_clusters$description,
+                                    sutton_photo_clusters$tags)
+
+sutton_photo_text <- sutton_photo_clusters %>%
+  unnest_tokens(word, text)
+
+sentiment <- sutton_photo_text %>%
+  inner_join(get_sentiments("afinn")) %>%
+  group_by(url_l) %>%
+  summarise(sentiment = sum(value)) %>%
+  st_set_geometry(NULL) %>%
+  inner_join(sutton_photo_clusters) %>%
+  arrange(-sentiment) %>%
+  mutate(id = 1:n())
+```
+
+```{r sutton senitment graph, echo = F, message = F, warning = F, fig.width = 10, fig.cap = "Figure 11: A graph to show sentiment analysis of the photo data of Sutton Park"}
+ggplot(sentiment, aes(x = id, y = sentiment,
+                      fill = cluster)) +
+  geom_bar(stat = "identity")
+```
+
+To further this project, a data source such as Instagram may be useful
+due its more widespread use, however their API is much more difficult to
+access. Also of use may be a review platform, such as Google Maps.
 
 ## Final Project: Using GTFS Feeds to Visualise Transport Data from the West Midlands
 
