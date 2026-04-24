@@ -1,6 +1,6 @@
 ---
 title: "Digital Data Capture & Analysis Lab Book"
-author: "2592586"
+author: "Edward Mason"
 output: 
   html_document: 
     toc: true
