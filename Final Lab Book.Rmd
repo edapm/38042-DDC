@@ -1,6 +1,6 @@
 ---
 title: "Digital Data Capture & Analysis Lab Book"
-author: "Edward Mason"
+author: "2592586"
 output: 
   html_document: 
     toc: true
@@ -13,8 +13,12 @@ editor_options:
 bibliography: references.bib
 ---
 
-```{r load packages, echo = F, warning = F, message = F}
+```{r load packages, warning = F, message = F}
+# general libraries to load
 library(tidyverse)
+library(sf)
+
+# env. sensing libraries
 library(plotly)
 library(ggpubr)
 library(ggpmisc)
@@ -25,16 +29,19 @@ library(gganimate)
 library(thermocouple)
 library(Metrics)
 
-library(sf)
+# api + ai libraries
 library(photosearcher)
 library(textclean)
 library(tidytext)
 library(igraph, warn.conflicts = FALSE)
 
+# final project libraries
 library(tidytransit)
+library(maptiles)
+library(tidyterra)
 ```
 
-## Weeks 1 and 2: Creating a 360 Virtual Tour of Campus
+## Creating a 360 Virtual Tour of Campus
 
 This week we have been using [ThingLink](https://thinglink.com) and 360
 photos taken with GoPro/Insta360 cameras to create 360 Virtual Tours.
@@ -66,7 +73,7 @@ Below is the final tour on ThingLink.
 knitr::include_url("https://www.thinglink.com/view/scene/2073448908817695397")
 ```
 
-## Weeks 3 and 4: Photogrammetry (Structure for Motion modelling)
+## Photogrammetry
 
 ```{r sfm model, echo = F, fig.width = 10, fig.cap = "Figure 2: A model of an IKEA Marius stool"}
 knitr::include_url("https://sketchfab.com/models/6c712d4d24a74af5b12fbec2aef62aae/embed")
@@ -92,9 +99,10 @@ processing could be considered, such as modifying parameters, however
 considering the aforementioned background concerns, these would probably
 be not as consequential in approving the final model output.
 
-## Weeks 5 and 7: Enivronmental Sensing
+## Environmental Sensing
 
-```{r environmental sensing - load data, echo = F, warning = F, message = F}
+```{r environmental sensing - load data, warning = F, message = F}
+# load data files
 df_cal <- read_csv("Practical-Week7/NTC_cal_example.csv")
 df_adc_water <- read_csv("Practical-Week7/ADC_water_bath_example.csv")
 df_adc_air <- read_csv("Practical-Week7/ADC_air_logging_example.csv")
@@ -143,14 +151,12 @@ Arduino-based sensor was recorded along with the temperature from a
 reference probe, with ten readings taken from each bath. The results are
 shown in Figure 2:
 
-```{r resistance-temp graph, echo = F, fig.width = 10, fig.cap = "Figure 4: A graph to show Resistance against Temperature as measured by an Arduino-based temperature sensor"}
+```{r resistance-temp graph, fig.width = 10, fig.cap = "Figure 4: A graph to show Resistance against Temperature as measured by an Arduino-based temperature sensor"}
 ggplot(data = df_cal, mapping = aes(x = Resistance, y = Ref_temp)) + 
   geom_point(size=3.5, shape=1, colour="black") + 
   ylab("Water temperature (\u00b0C)") +
   xlab("Resistance (\u2126)")
 ```
-
-\
 
 We can see a clear pattern of an increase of resistance as temperature
 decreases - this means that the thermistor used has a negative
@@ -160,6 +166,7 @@ Next, we will fit a calibration model to the data. The code below
 creates a linear and non-linear (polynomial) model from the data.
 
 ```{r models}
+# create models
 linear_model <- lm(data = df_cal, 
                    formula = Ref_temp ~ Resistance)
 
@@ -183,13 +190,13 @@ a larger R-Squared value and F-Statistic.
 
 Below are the models plotted against the data:
 
-```{r linear model and data graph, echo = F, warning = F, message = F, fig.width = 10, fig.cap = "Figure 5: A graph to show Resistance against Temperature with a linear model"}
+```{r linear model and data graph, warning = F, message = F, fig.width = 10, fig.cap = "Figure 5: A graph to show Resistance against Temperature with a linear model"}
 ggplot(df_cal, aes(y = Ref_temp, x = Resistance)) +
   geom_point() +
   geom_smooth(method = lm)
 ```
 
-```{r polynomial model and data graph, echo = F, warning = F, message = F, fig.width = 10, fig.cap = "Figure 6: A graph to show Resistance against Temperature with a non-linear model"}
+```{r polynomial model and data graph, warning = F, message = F, fig.width = 10, fig.cap = "Figure 6: A graph to show Resistance against Temperature with a non-linear model"}
 ggplot(df_cal, aes(y = Ref_temp, x = Resistance)) +
   geom_point() +
   geom_smooth(method = lm, formula = y ~ poly(x, 2, raw = T))
@@ -197,7 +204,8 @@ ggplot(df_cal, aes(y = Ref_temp, x = Resistance)) +
 
 The mean and standard deviation for each model is shown below.
 
-```{r beta and log models; fitted values into a table, echo = F, warning = F, message = F}
+```{r beta and log models; fitted values into a table, warning = F, message = F}
+# create beta and log models
 df_cal$Log_res <- log(df_cal$Resistance)
 log_linear_model<-lm(data = df_cal, formula = Ref_temp ~ Log_res)
 df_cal$Temp_beta <- ThermistorTemperature(R0 = 10000, T0 = 25, R = df_cal$Resistance, betaTH = 3950)
@@ -205,6 +213,7 @@ df_cal$Temp_linear <- linear_model$fitted.values
 df_cal$Temp_poly <- poly_model$fitted.values
 df_cal$Temp_loglin <- log_linear_model$fitted.values
 
+# model summary table
 tib_cal <- tibble(Ref_temp = df_cal$Ref_temp, Temp_beta = df_cal$Temp_beta, Temp_linear = df_cal$Temp_linear, Temp_poly = df_cal$Temp_poly, Temp_loglin = df_cal$Temp_loglin)
 
 tib_cal_summary <- tib_cal |>
@@ -234,6 +243,7 @@ knitr::kable(tib_cal_summary, col.names = c("Ref Temp (°C)", "Beta Model (Mean 
 ```
 
 ```{r calculate values, echo = T, warning = F, message = F, results = "hide", fig.width = 10, fig.cap = "Figure 7: Models Comparison"}
+# model comparisons plot and stats
 df_cal_long <- df_cal |> pivot_longer(!c(Cal_medium, Resistance,
                                        Voltage, Ref_temp, 
                                        Log_res),
@@ -276,11 +286,13 @@ and for most projects this should be fine.
 
 ### Analogue-Digital Conversion (ADC)
 
-```{r adc boxplots data, echo = F, warning = F, message = F}
+```{r adc boxplots data, warning = F, message = F}
+# Note: I used the Water data for this section as opposed to the Air data, since the joining of the air temperature and air reference temperature datasets failed, as there were no common times between them.
+
+# look at adc data and models
 df_adc_water_L$Temp <- predict(object = poly_model, df_adc_water_L)
 
 df_adc_air_L$Temp <- predict(object =poly_model, df_adc_air_L)
-
 
 df_adc_air_L$Temp_beta <-ThermistorTemperature(R0 = 10000, T0 = 25, R = df_adc_air_L$Resistance, betaTH = 3950)
 
@@ -295,7 +307,7 @@ df_adc_ref_air <- df_adc_refT |>
   left_join(df_adc_air_L, by = "Time")
 ```
 
-```{r adc boxplot one, echo = F, warning = F, message = F, fig.width = 10, fig.cap = "Figure 8: Plot of ADC (using Water reference)"}
+```{r adc boxplot one, warning = F, message = F, fig.width = 10, fig.cap = "Figure 8: Plot of ADC (using Water reference)"}
 df_adc_ref_water |> 
   filter(!is.na(ADC_Bits)) |>
   ggplot(aes(x = ADC_Bits, y = Temp_beta)) + 
@@ -303,17 +315,25 @@ df_adc_ref_water |>
   geom_point()
 ```
 
-```{r adc boxplot two, echo = F, warning = F, message = F, fig.width = 10, fig.cap = "Figure 9: Plot of ADC (Using Water reference, without box)"}
+Figure 8 shows that the 8-bit ADC conversion returns a slightly higher
+value than a 10-bit conversion, and 12-bit is lower than 10-bit.
+However, the difference between the 10-bit and 12-bit conversions is
+much less than that between 8-bit and 10-bit conversions. This is shown
+more clearly in Figure 9 below.
+
+```{r adc boxplot two, warning = F, message = F, fig.width = 10, fig.cap = "Figure 9: Plot of ADC (Using Water reference, without box)"}
 df_adc_ref_water |> 
   filter(!is.na(ADC_Bits)) |>
   ggplot(aes(x = ADC_Bits, y = Temp_beta)) + 
   geom_dotplot(binaxis = "y")
 ```
 
-```{r adc summary table, echo = F, warning = F, message = F}
+```{r adc summary table, warning = F, message = F}
+# summary table for adc data
 tib_adc_ref_water <- tibble(df_adc_ref_water)
 
 tib_adc_summary <- tib_adc_ref_water |>
+  filter(!is.na(ADC_Bits)) |> 
   group_by(ADC_Bits) |>
   summarise(
     Mean = mean(Temp_ref),
@@ -327,107 +347,71 @@ tib_adc_summary <- tib_adc_summary |> mutate(
 tib_adc_summary <- tib_adc_summary |>
   unite(Summ_temp_ref, Mean:Sd, sep = "±", na.rm = T)
 
-knitr::kable(tib_adc_summary, caption = "Table 5: Summary Statistics for each Reference Temperature and Model")
+knitr::kable(tib_adc_summary, caption = "Table 5: Summary Statistics for each Resolution")
 ```
 
-### Todo
+It is interesting to note that the summary statistics for each
+resolution are the same, suggesting that the difference is not noted
+when rounded to 3 decimal places.
 
-1.  ~~Give this section of your lab book a title – e.g "using
-    environmental sensors".~~
+Looking at the sensor setup overall, the Arduino platform is a
+well-developed "open-hardware" ecosystem with supporting software and
+documentation. However, as with all "open-source" systems, there are
+some pitfalls. Firstly, the system is very much DIY - you are provided
+with the components, but as the user you must then assemble the parts,
+both physically (the hardware) and in terms of programming the assembled
+system to do what you would like it to. This requires, in the case of
+the Arduino ecosystem, a knowledge of C/C++ languages. Furthermore, if
+anything goes wrong, there is no dedicated customer support, but only
+documentation and support forums. That being said, if these obstacles
+can be overcome, the Arduino platform can scale rapidly and relatively
+cheaply compared to alternative proprietary sensing systems, making it a
+viable option for more widespread sensing networks, or for smaller
+companies and/or non-profits who cannot afford the more expensive
+alternatives.
 
-2.  ~~Briefly explain how you collected the data (i.e. the methods you
-    used). Here you can include images, schematics and text. Be sure to
-    highlight the instruments used.~~
-
-3.  ~~For the calibration generate a scatter plot of resistance vs
-    observed temperature. Ensure you include a figure caption and some
-    plain text with a brief description of the pattern(s) observed.~~
-
-4.  ~~Now fit a linear model and a non-linear model. Extract information
-    on the model fit and present these in a table with a short
-    interpretation of the results (which model appear to have the better
-    fit)?~~
-
-5.  ~~Apply both models to the data and calculate the mean and SD for
-    each calibration data point. Present this as a table, what do you
-    notice about the data?~~
-
-6.  ~~Calculate the sensor linearity and accuracy (RMSE) based on the
-    model you think is best. Present this data as a table or integrated
-    into a short paragraph that describes the results. Would you be
-    happy to use this sensor for another research project? How does it
-    compare to commercial sensor specifications?~~
-
-7.  For the ADC experiment plot the data as boxplot (8-bit, 10-bit and
-    12-bit). What do you notice? Now plot the data as a dot plot – what
-    does this tell us about the difference in the step size (i.e.
-    resolution in °C)?
-
-8.  Calculate the mean and SD for each resolution along with the mean
-    and SD of the reference sensor (10 data points required). What do
-    you notice?
-
-9.  ~~End your notebook with some short reflections on using the Arduino
-    platform – what worked well, what didn’t and what you’d do
-    differently if you were using the platform for another project.~~
-
-The Arduino platform is a well-developed "open-hardware" ecosystem with
-supporting software and documentation. However, as with all
-"open-source" systems, there are some pitfalls. Firstly, the system is
-very much DIY - you are provided with the components, but as the user
-you must then assemble the parts, both physically (the hardware) and in
-terms of programming the assembled system to do what you would like it
-to. This requires, in the case of the Arduino ecosystem, a knowledge of
-C/C++ languages. Furthermore, if anything goes wrong, there is no
-dedicated customer support, but only documentation and support forums.
-That being said, if these obstacles can be overcome, the Arduino
-platform can scale rapidly and relatively cheaply compared to
-alternative proprietary sensing systems, making it a viable option for
-more widespread sensing networks, or for smaller companies and/or
-non-profits who cannot afford the more expensive alternatives.
-
-## Week 6: APIs and AI - Using Flickr's API to map sentiments and topics spatially in Sutton Park, West Midlands
+## APIs and AI - Using Flickr's API to map sentiments and topics spatially in Sutton Park
 
 Looking at how to use APIs and AI, this next section shows how the use
 of [Flickr](https://flickr.com)'s API can show in a visual way how
 people experience green spaces, with very precise spatial data.
 
-```{r apis and ai setup, echo = F, message = F, warning = F, results = "hide"}
+```{r apis and ai setup, message = F, warning = F, results = "hide"}
 boundary <- st_read("Practical-Week6/Sutton Park Boundary_region.shp")
 
 # note - I saved the data from the Flickr API to a csv file in order to save rendering time, as fetching all the data from the API every time takes a while!
 sutton_photos <- read_csv("Practical-Week6/sutton_photos.csv", col_names = T, na = "NA")
 
-sutton_text <- sutton_photos %>%
+sutton_text <- sutton_photos |>
   mutate(
     text = paste(title, description, tags),
     text = replace_url(text),
     text = str_squish(text)
-  ) %>%
+  ) |>
   filter(!is.na(text), text != "")
 
 data("stop_words")
 
-tidy_tokens <- sutton_text %>%
-  select(url_l, longitude, latitude, title, description, tags, text) %>%
-  unnest_tokens(word, text) %>%
-  anti_join(stop_words, by = "word") %>%
-  filter(str_detect(word, "^[a-z][a-z'-]*$")) %>%
+tidy_tokens <- sutton_text |>
+  select(url_l, longitude, latitude, title, description, tags, text) |>
+  unnest_tokens(word, text) |>
+  anti_join(stop_words, by = "word") |>
+  filter(str_detect(word, "^[a-z][a-z'-]*$")) |>
   count(url_l, word, sort = FALSE)
 
-photo_word <- tidy_tokens %>%
-  mutate(n = 1) %>%
+photo_word <- tidy_tokens |>
+  mutate(n = 1) |>
   pivot_wider(names_from = word, values_from = n, values_fill = 0)
 
-word_counts <- tidy_tokens %>% count(word, name = "photo_count")
+word_counts <- tidy_tokens |> count(word, name = "photo_count")
 
-keep_words <- word_counts %>% filter(photo_count >= 5) %>% pull(word)
+keep_words <- word_counts |> filter(photo_count >= 5) |> pull(word)
 
-photo_word_mat <- tidy_tokens %>%
-  filter(word %in% keep_words) %>%
-  mutate(n = 1) %>%
-  pivot_wider(names_from = word, values_from = n, values_fill = 0) %>%
-  select(-url_l) %>%
+photo_word_mat <- tidy_tokens |>
+  filter(word %in% keep_words) |>
+  mutate(n = 1) |>
+  pivot_wider(names_from = word, values_from = n, values_fill = 0) |>
+  select(-url_l) |>
   as.matrix()
 
 keyword_cooccurrance <- t(photo_word_mat) %*% photo_word_mat
@@ -446,23 +430,23 @@ keyword_importance <- map_df(1:max(clusters$membership), function(i) {
                                   mode="undirected",
                                   diag=FALSE)
   eigens <- eigen_centrality(graph)$vector
-  eigens_df <- tibble(eigenvalue = eigens, keyword = names(eigens), cluster = i) %>%
+  eigens_df <- tibble(eigenvalue = eigens, keyword = names(eigens), cluster = i) |>
     arrange(-eigenvalue)
 })
 
-keyword_importance %>% group_by(cluster) %>%
+keyword_importance |> group_by(cluster) |>
   slice(1:10)
 
 word_to_cluster <- tibble(keyword = V(graph)$name, cluster = clusters$membership)
 
-assign_cluster <- tidy_tokens %>%
-  filter(word %in% word_to_cluster$keyword) %>%
-  inner_join(word_to_cluster, by = c("word" = "keyword")) %>%
-  count(url_l, cluster, name = "votes") %>%
-  group_by(url_l) %>%
-  slice_max(votes, n = 1, with_ties = TRUE) %>%
-  slice(1) %>%
-  ungroup() %>%
+assign_cluster <- tidy_tokens |>
+  filter(word %in% word_to_cluster$keyword) |>
+  inner_join(word_to_cluster, by = c("word" = "keyword")) |>
+  count(url_l, cluster, name = "votes") |>
+  group_by(url_l) |>
+  slice_max(votes, n = 1, with_ties = TRUE) |>
+  slice(1) |>
+  ungroup() |>
   mutate(cluster = factor(cluster, labels = paste("Cluster", sort(unique(cluster)))))
 
 assign_cluster$cluster <- factor(assign_cluster$cluster,
@@ -475,8 +459,8 @@ assign_cluster$cluster <- factor(assign_cluster$cluster,
                                             "Photos and Blogs",
                                             "Other"))
 
-sutton_photo_clusters <- sutton_photos %>%
-  inner_join(assign_cluster) %>%
+sutton_photo_clusters <- sutton_photos |>
+  inner_join(assign_cluster) |>
   st_as_sf(coords = c("longitude", "latitude"), crs = st_crs(4326))
 ```
 
@@ -489,10 +473,12 @@ this occurred. However, it worth noting that the platform of Flickr is
 mostly the realm of photographers, and is not as synonymous as a
 platform such as Instagram.
 
-```{r sutton photo cluster map, echo = F, message = F, warning = F, fig.width = 10, fig.cap = "Figure 10: A map showing the locations of photos of Sutton Park (Source: Flickr)"}
+```{r sutton photo cluster map, message = F, warning = F, fig.width = 10, fig.cap = "Figure 10: A map showing the locations of photos of Sutton Park (Source: Flickr)"}
 ggplot() +
   geom_sf(data = boundary) +
-  geom_sf(data = sutton_photo_clusters, aes(colour = cluster))
+  geom_sf(data = sutton_photo_clusters, aes(colour = cluster)) + 
+  labs(colour = "Cluster") + 
+  theme_bw()
 ```
 
 There is an interesting spatial pattern for the cluster "People and the
@@ -503,28 +489,30 @@ algorithm used to form these clusters may result in more positive or
 negative clusters, potentially due to how it links similar words
 together.
 
-```{r sutton senitment analysis, echo = F, message = F, warning = F}
+```{r sutton senitment analysis, message = F, warning = F}
 sutton_photo_clusters$text <- paste(sutton_photo_clusters$title,
                                     sutton_photo_clusters$description,
                                     sutton_photo_clusters$tags)
 
-sutton_photo_text <- sutton_photo_clusters %>%
+sutton_photo_text <- sutton_photo_clusters |>
   unnest_tokens(word, text)
 
-sentiment <- sutton_photo_text %>%
-  inner_join(get_sentiments("afinn")) %>%
-  group_by(url_l) %>%
-  summarise(sentiment = sum(value)) %>%
-  st_set_geometry(NULL) %>%
-  inner_join(sutton_photo_clusters) %>%
-  arrange(-sentiment) %>%
+sentiment <- sutton_photo_text |>
+  inner_join(get_sentiments("afinn")) |>
+  group_by(url_l) |>
+  summarise(sentiment = sum(value)) |>
+  st_set_geometry(NULL) |>
+  inner_join(sutton_photo_clusters) |>
+  arrange(-sentiment) |>
   mutate(id = 1:n())
 ```
 
-```{r sutton senitment graph, echo = F, message = F, warning = F, fig.width = 10, fig.cap = "Figure 11: A graph to show sentiment analysis of the photo data of Sutton Park"}
+```{r sutton senitment graph, message = F, warning = F, fig.width = 10, fig.cap = "Figure 11: A graph to show sentiment analysis of the photo data of Sutton Park"}
 ggplot(sentiment, aes(x = id, y = sentiment,
                       fill = cluster)) +
-  geom_bar(stat = "identity")
+  geom_bar(stat = "identity") + 
+  labs(x = "ID", y = "Sentiment", fill = "Cluster") + 
+  theme_bw()
 ```
 
 To further this project, a data source such as Instagram may be useful
@@ -533,19 +521,237 @@ access. Also of use may be a review platform, such as Google Maps.
 
 ## Final Project: Using GTFS Feeds to Visualise Transport Data from the West Midlands
 
-**Project Aim**: Using Transport for West Midlands' GTFS feeds and the
-tidytransit R package [@poletti2026], this project shows how service
-frequency and transport mode varies across the West Midlands Combined
-Authority area.
+```{r tfwm project data, message = F, warning = F, results = "hide"}
+# load gtfs data from zip downloaded from tfwm api
+tfwm <- read_gtfs("Final-Project/tfwm.zip")
+gtfs <- set_servicepattern(tfwm)
+gtfs <- gtfs_as_sf(gtfs)
 
-### Todo
+gtfs$shapes$length <- st_length(gtfs$shapes)
 
-1.  Briefly explain what you’re trying to achieve with the project
+shape_lengths <- gtfs$shapes |> 
+  as.data.frame() |> 
+  select(shape_id, length, -geometry)
 
-2.  Explain the choices you made on the techniques used
+# create service pattern summary data frame
+service_pattern_summary <- gtfs$trips |> 
+  left_join(gtfs$.$servicepatterns, by="service_id") |> 
+  left_join(shape_lengths, by="shape_id") |>
+  left_join(gtfs$stop_times, by="trip_id") |> 
+  group_by(servicepattern_id) |> 
+  summarise(
+    trips = n(), 
+    routes = n_distinct(route_id),
+    total_distance_per_day_km = sum(as.numeric(length), na.rm=TRUE)/1e3,
+    route_avg_distance_km = (sum(as.numeric(length), na.rm=TRUE)/1e3)/(trips*routes),
+    stops=(n_distinct(stop_id)/2))
 
-3.  Reflect on any ethical implications
+service_pattern_summary <- gtfs$.$dates_servicepatterns |>  
+  group_by(servicepattern_id) |> 
+  summarise(days_in_service = n()) |> 
+  left_join(service_pattern_summary, by="servicepattern_id")
 
-4.  Critically evaluate the effectiveness of your project
+service_ids <- gtfs$.$servicepatterns |>
+  pull(service_id)
+
+gtfs$trips |>
+  filter(service_id %in% service_ids) |>
+  group_by(service_id, route_id) |>
+  left_join(gtfs$routes, by = "route_id") |>
+  filter(agency_id == "OP100") |>
+  summarise(count = n())
+
+am_stop_freq <- get_stop_frequency(gtfs, start_time = 6*3600, end_time = 10*3600, 
+                                   service_ids = service_ids, by_route = TRUE)
+```
+
+**Project Aim**: Using [Transport for West Midlands (TfWM)'s
+API](https://api-portal.tfwm.org.uk) and the *tidytransit* R package
+[@poletti2026], this project aims to visualise key and useful aspects of
+the [National Express Bus West Midlands (NXBus WM)
+network](https://nxbus.co.uk/west-midlands).
+
+The General Transit Feed Specification (GTFS) is a specification that
+enables transport providers to provide service information in a uniform
+manner, to be accessible to third-party applications through an API,
+enabling accurate service information in apps such as Google Maps. The
+*tidytransit* package enables R to interact with the GTFS format,
+enabling it to be used in data analysis and visualisation. This project
+is based on some of the [*tidytransit* sample
+projects](https://r-transit.github.io/tidytransit/articles/introduction.html),
+although I have modified a substantial portion to create interesting
+visualisations for this particular dataset.
+
+Firstly - due to the number of routes run by NXBus WM and destinations
+covered - I have filtered the dataset to only include their express "X"
+services. These routes are shown in Figure 12.
+
+```{r nxbus routes + data prep, warning = F, message = F, results = "hide", fig.width = 10, fig.cap = "Figure 12: Express Routes"}
+# filter for stops on lines
+one_line_stops <- am_stop_freq |>
+  left_join(gtfs$routes, by = "route_id") |>
+  filter(agency_id == "OP100", direction_id == 0) |>
+  filter(str_detect(route_short_name, "X")) |>
+  left_join(gtfs$stops, by ="stop_id") |> 
+  mutate(mean_headway_minutes = mean_headway/60)
+
+# get spatial data for routes
+one_line_stops_sf <- gtfs$stops |>
+  right_join(one_line_stops, by="stop_id")
+
+# convert to correct crs
+one_line_stops_sf_crs <- sf::st_transform(one_line_stops_sf, 4326)
+
+# get online tile for basemap
+basemap <- get_tiles(one_line_stops_sf_crs, provider = "CartoDB.Positron", zoom = 12)
+
+# get frequency of routes
+am_route_freq <- get_route_frequency(gtfs, service_ids = service_ids, 
+                                     start_time = 6*3600, end_time = 10*3600)
+
+# get spatial data for routes
+routes_sf <- get_route_geometry(gtfs, service_ids = service_ids)
+routes_sf <- routes_sf |> 
+  inner_join(am_route_freq, by = "route_id")
+
+# convert to correct crs
+routes_sf_crs <- sf::st_transform(routes_sf, 4326)
+
+nxbus_express <- tfwm$routes |>
+  filter(agency_id == "OP100") |>
+  filter(str_detect(route_short_name, "X"))
+
+routes_sf_crs <- routes_sf_crs |>
+  inner_join(nxbus_express, by = "route_id")
+
+routes_sf_crs |>
+  ggplot() + 
+  geom_spatraster_rgb(data = basemap) + 
+  geom_sf(aes(colour = route_short_name)) + 
+  labs(color = "Route", caption = "© OpenStreetMap contributors © CARTO © Transport for West Midlands") +
+  theme_bw()
+```
+
+Next, Figure 13 shows a map of the mean headway for each stop on the
+line. Headway is the distance between vehicles on the line. It is
+interesting to note that the headway decreases the closer to the centre
+of Birmingham the lines go.
+
+```{r nxbus stops and headways, warning = F, message = F, results = "hide", fig.width = 10, fig.cap = "Figure 13: Mean Headway Times at Stops"}
+ggplot() + 
+geom_spatraster_rgb(data = basemap) +
+geom_sf(data = one_line_stops_sf_crs, aes(color = mean_headway_minutes)) +
+labs(color = "Mean Headway (Minutes)", caption = "© OpenStreetMap contributors © CARTO © Transport for West Midlands") + 
+theme_bw()
+```
+
+Turning to departure frequency across the stops on the express services
+(between 09:00 and 17:00), this visualisation shows the end locations of
+services throughout the day, including how service termini changes
+across the day.
+
+```{r nxbus departure frequencies, message = F, warning = F, fig.width = 10, fig.cap = "Figure 14: Destinations and Frequency"}
+# get data for nxbus routes and stops
+nxbus <- tfwm$routes |>
+  filter(agency_id == "OP100")
+
+nxbus_trips <- left_join(tfwm$trips, nxbus, by="route_id") |>
+  filter(agency_id == "OP100")
+
+nxbus_stoptimes <- left_join(tfwm$stop_times, nxbus_trips, by="trip_id") |>
+  filter(agency_id == "OP100")
+
+nxbus_stops <- left_join(tfwm$stops, nxbus_stoptimes, by="stop_id") |>
+  filter(agency_id == "OP100")
+
+nxbus_stops_time_sep <- nxbus_stops |>
+  separate(departure_time, sep = ":", into = c("dep_hours", "dep_mins", "dep_secs")) |>
+  mutate_at(c("dep_hours", "dep_mins", "dep_secs"), as.numeric)
+
+# filter by departures between 09:00 and 17:00
+departures_nine_to_five <- nxbus_stops_time_sep |>
+  filter(dep_hours >= 9 & dep_hours <= 16)
+
+graph_data <- departures_nine_to_five |>
+  mutate(departure_time = make_datetime(hour = dep_hours, min = dep_mins, sec = dep_secs)) |>
+  filter(str_detect(route_short_name, "X"))
+
+ggplot(graph_data) + theme_bw() +
+  geom_point(aes(y=trip_headsign, x=departure_time, color = route_short_name), size = 0.2) +
+  scale_x_time(breaks = seq(0, max(as.numeric(graph_data$departure_time)), 3600), 
+               labels = scales::time_format("%H")) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  theme(legend.position = "bottom") + 
+  guides(color = guide_legend(override.aes = list(size = 3))) + 
+  labs(x = "Departure Time", y = "Destination", color = "Route", caption = "© Transport for West Midlands")
+```
+
+This data can be further filtered to look at departures from a
+particular stop. A common stop for buses is Birmingham New Street
+station: departures from here, on 1st April, are shown below.
+
+```{r departures from new st station, warning = F, message = F, fig.width = 10, fig.cap = "Figure 15: Departures from Birmingham New St Station (01-04-26)"}
+# add trip origin data to dataset
+first_stop_id <- gtfs$stop_times %>% 
+  group_by(trip_id) %>% 
+  summarise(stop_id = stop_id[which.min(stop_sequence)])
+
+first_stop_names <- left_join(first_stop_id, gtfs$stops, by="stop_id")
+
+trip_origins <- first_stop_names %>% select(trip_id, trip_origin = stop_name)
+
+gtfs$trips <- left_join(gtfs$trips, trip_origins, by = "trip_id")
+
+# filter for stop New Street
+stop_ids <- gtfs$stops |> 
+  filter(stop_name == "New Street" | stop_name == "New St Station" | stop_name == "New St") |> 
+  select(stop_id)
+
+# create departures data frame
+departures <- stop_ids |> 
+  inner_join(gtfs$stop_times |> 
+               select(trip_id, arrival_time, 
+                      departure_time, stop_id), 
+             by = "stop_id")
+
+departures <- departures |> 
+  left_join(gtfs$trips |> 
+              select(trip_id, route_id, 
+                     service_id, trip_headsign, 
+                     trip_origin), 
+            by = "trip_id")
+
+departures <- departures |> 
+  left_join(gtfs$routes |> 
+              select(route_id, 
+                     route_short_name, agency_id), 
+            by = "route_id")
+
+# filter to services on 01-04-26
+services_on_010426 <- gtfs$.$dates_services |> 
+  filter(date == "2026-04-01") |> 
+  select(service_id)
+
+# filter departures by services on 01-04-26
+departures_010426 <- departures |> 
+  inner_join(services_on_010426, by = "service_id") |>
+  filter(agency_id == "OP100") |>
+  filter(str_detect(route_short_name, "X"))
+
+ggplot(departures_010426) +
+  theme_bw() + 
+  geom_point(aes(y = route_short_name, x = departure_time, color = route_short_name), size = 2) + 
+  scale_x_time(breaks = seq(0, max(as.numeric(departures_010426$departure_time)), 3600), labels = scales::time_format("%H")) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  labs(x = "Departure Time", y = "Route", caption = "© Transport for West Midlands") + 
+  theme(legend.position = "none")
+```
+
+These visualisations help to show the distribution of buses across
+Birmingham, and frequency data for buses. This data could be useful to
+transport planners in looking at the different bus services in the
+region. However, a limitation is that TfWM does not provide a live GTFS
+feed as part of their public API, and therefore data such as punctuality
+and reliability cannot be analysed as part of this project.
 
 ## References
