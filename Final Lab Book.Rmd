@@ -635,7 +635,8 @@ routes_sf_crs |>
 Next, Figure 13 shows a map of the mean headway for each stop on the
 line. Headway is the distance between vehicles on the line. It is
 interesting to note that the headway decreases the closer to the centre
-of Birmingham the lines go.
+of Birmingham the lines go. However, in the east, headway is much larger
+than in the west.
 
 ```{r nxbus stops and headways, warning = F, message = F, results = "hide", fig.width = 10, fig.cap = "Figure 13: Mean Headway Times at Stops"}
 ggplot() + 
